@@ -1,0 +1,154 @@
+openapi: "3.1.0"
+info:
+  title: Chuck Norris Jokes
+  version: "1.0.0"
+  description: Have fun with this online database of Chuck Norris's facts.
+servers:
+  - url: https://api.chucknorris.io/jokes
+paths:
+  /random:
+    get:
+      summary: ''
+      description: Retrieve a random Chuck Norris's joke in JSON format.
+      operationId: 'getJoke'
+      tags:
+      - ChuckNorris
+      parameters:
+      - name: category
+        in: query
+        required: false
+        description: specify the set of jokes to use
+        schema:
+          type: string
+      responses:
+        '200':
+          description: a joke
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/jokeObject"
+              examples:
+                a sample joke:
+                  value: >-
+                    {"categories":[],"created_at":"2020-01-05
+                    13:42:22.701402","icon_url":"https://assets.chucknorris.host/img/avatar/chuck-norris.png","id":"yP3U6DIbR4yn0fRmvXMRQA","updated_at":"2020-01-05
+                    13:42:22.701402","url":"https://api.chucknorris.io/jokes/yP3U6DIbR4yn0fRmvXMRQA","value":"What's
+                    the difference between Santa Claus and Chuck Norris's tears?
+                    More people believe in Santa Claus."}
+        404:
+          description: The given category is not listed in the database.
+        default:
+          description: Default error sample response
+  /categories:
+    get:
+      summary: ''
+      description: Retrieve the list of available jokes categories.
+      operationId: 'getCategoriesList'
+      tags:
+      - ChuckNorris
+      responses:
+        '200':
+          description: the list of available jokes categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  description: keyword that describes a set of jokes
+                  type: string
+              examples:
+                a list of available jokes categories:
+                  value: >-
+                    ["animal","career","celebrity","dev","explicit","fashion","food","history","money","movie","music","political","religion","science","sport","travel"]
+        default:
+          description: Default error sample response
+  /search:
+    get:
+      summary: ''
+      description: Retrieve jokes that contain the given string.
+      operationId: 'getJokesWithString'
+      tags:
+      - ChuckNorris
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: the string to look for in the text of the jokes
+          schema:
+            type: string
+      responses:
+        '200':
+          description: an array of jokes
+          content:
+            application/json:
+              schema:
+                properties:
+                  total:
+                    description: number of returned jokes
+                    type: integer
+                  result:
+                    description: the set of returned jokes
+                    type: array
+                    items: {"$ref": "#/components/schemas/jokeObject"}
+              examples:
+                jokes that contain "hello":
+                  value: >-
+                    {"total":5,"result":[{"categories":[],"created_at":"2020-01-05
+                    13:42:20.841843","icon_url":"https://assets.chucknorris.host/img/avatar/chuck-norris.png","id":"6aqcOwDJQyeMo9FvUCJjow","updated_at":"2020-01-05
+                    13:42:20.841843","url":"https://api.chucknorris.io/jokes/6aqcOwDJQyeMo9FvUCJjow","value":"Chuck
+                    Norris and his Mom have matching tattoos. Left kuckle Right
+                    knuckle Chuck Norris . Left foot Right foot Chuck Norris.
+                    Only one difference. Above his Mom's hairy mat it reads
+                    Hello ! Above Chuck Norris's bearded Ass it simply reads
+                    Goodbye."},{"categories":[],"created_at":"2020-01-05
+                    13:42:22.980058","icon_url":"https://assets.chucknorris.host/img/avatar/chuck-norris.png","id":"nlvsVqcOQaWezU6I18SzJQ","updated_at":"2020-01-05
+                    13:42:22.980058","url":"https://api.chucknorris.io/jokes/nlvsVqcOQaWezU6I18SzJQ","value":"Hello
+                    Kitty has stubby arms because Chuck Norris was feeling
+                    hungry."},{"categories":[],"created_at":"2020-01-05
+                    13:42:26.194739","icon_url":"https://assets.chucknorris.host/img/avatar/chuck-norris.png","id":"q4kNgA2wQyWKnDj8TVddSQ","updated_at":"2020-01-05
+                    13:42:26.194739","url":"https://api.chucknorris.io/jokes/q4kNgA2wQyWKnDj8TVddSQ","value":"Simon
+                    & Garfunkel wrote the lyric 'Hello darkness, my old friend'
+                    about the end of several thousand men who saw a Chuck Norris
+                    testicle decending to crush their
+                    head."},{"categories":[],"created_at":"2020-01-05
+                    13:42:26.991637","icon_url":"https://assets.chucknorris.host/img/avatar/chuck-norris.png","id":"0cyirBrJSay5yYEL1yYw_A","updated_at":"2020-01-05
+                    13:42:26.991637","url":"https://api.chucknorris.io/jokes/0cyirBrJSay5yYEL1yYw_A","value":"In
+                    the original making of Scarface when Tony said \"say hello
+                    to my little friend\" Chuck Norris appeared. However, the
+                    director cut it out said it was too gruesome for a R rated
+                    movie."},{"categories":[],"created_at":"2020-01-05
+                    13:42:30.480041","icon_url":"https://assets.chucknorris.host/img/avatar/chuck-norris.png","id":"g96iRXO6TPWAgWkrWf_YRQ","updated_at":"2020-01-05
+                    13:42:30.480041","url":"https://api.chucknorris.io/jokes/g96iRXO6TPWAgWkrWf_YRQ","value":"once
+                    upon a time Chuck Norris seen a mime\"hello\" said chuck the
+                    mime didnt answer so he round house kicked him to death."}]}
+        default:
+          description: Default error sample response
+components:
+  schemas:
+    jokeObject:
+      description: a joke instance is made up of a funny text and some metadata
+      properties:
+        categories:
+          description: list of categories, if any, this joke is part of
+          type: array
+          items:
+            description: keyword that describes a set of jokes
+            type: string
+        created_at:
+          description: date at which the joke was added to the database
+          type: string
+        icon_url:
+          description: url to the Chuck Norris's avatar png file
+          type: string
+        id:
+          description: unique identifier for the joke
+          type: string
+        updated_at:
+          description: data at which the joke was last modified in the database
+          type: string
+        url:
+          description: link to a web page featuring the joke, the avatar, previous and netx jokes buttons, etc
+          type: string
+        value:
+          description: the funny text (Chuck Norris's fact) itself
+          type: string

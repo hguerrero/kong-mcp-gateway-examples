@@ -1,0 +1,45 @@
+_format_version: "3.0"
+vaults:
+  - name: konnect
+    prefix: kv
+    config:
+      config_store_id: a3a8af24-7515-4db1-a9d6-a4a169d4ea73
+plugins:
+  - name: request-transformer-advanced
+    instance_name: registry-api-auth-headers
+    route: registry-api-route
+    config:
+      add:
+        headers:
+          - "{vault://kv/KONNECT_TOKEN}"
+  - config:
+      logging:
+        log_payloads: true
+        log_statistics: true
+      max_request_body_size: 16384
+      mode: conversion-listener
+      tools:
+        - annotations:
+            title: MCP Registry Servers List
+          description: Retrieve MCP servers in the registry.
+          method: GET
+          host: host.docker.internal
+          path: /api/registry/v0/registries/b5fb0a06-10d6-412a-817f-ad629289916a/v0.1/servers
+          scheme: https
+    enabled: true
+    name: ai-mcp-proxy
+    instance_name: registry-mcp
+    route: registry-mcp-route
+services:
+- name: registry-api-service
+  url: https://klabs.us.api.konghq.com
+  routes:
+  - name: registry-api-route
+    paths:
+    - /api/registry
+- name: registry-mcp-service
+  url: https://host.docker.internal:8443
+  routes:
+  - name: registry-mcp-route
+    paths:
+    - /mcp/registry

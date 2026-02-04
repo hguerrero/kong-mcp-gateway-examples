@@ -1,0 +1,76 @@
+_format_version: "3.0"
+plugins:
+- config:
+    logging:
+      log_payloads: true
+      log_statistics: true
+    max_request_body_size: 16384
+    mode: conversion-listener
+    tools:
+    - annotations:
+        title: MCP Registry Servers List
+      description: Retrieve MCP servers in the registry.
+      method: GET
+      host: klabs.us.api.konghq.com:443
+      path: /v0/registries/b5fb0a06-10d6-412a-817f-ad629289916a/v0.1/servers
+      scheme: https
+  enabled: true
+  name: ai-mcp-proxy
+  route: registry-mcp
+- config:
+    logging:
+      log_payloads: true
+      log_statistics: true
+    max_request_body_size: 16384
+    mode: conversion-listener
+    tools:
+    - annotations:
+        title: Chuck Norris Random Joke
+      description: Retrieve a random chuck joke in JSON format.
+      method: GET
+      parameters:
+      - description: Retrieve a random chuck norris joke from a given category.
+        in: query
+        name: category
+        required: false
+        schema:
+          type: string
+      path: /api/chucknorris/jokes/random
+  enabled: true
+  name: ai-mcp-proxy
+  route: chucknorris-mcp
+- config:
+    logging:
+      log_payloads: true
+      log_statistics: true
+    max_request_body_size: 1048576
+    mode: passthrough-listener
+  enabled: true
+  name: ai-mcp-proxy
+  route: fetch-mcp-route
+services:
+- name: chucknorris-service
+  url: https://api.chucknorris.io
+  routes:
+  - name: chucknorris-route
+    paths:
+    - /api/chucknorris
+- name: chucknorris-mcp-service
+  url: http://host.docker.internal:8000
+  routes:
+  - name: chucknorris-mcp
+    paths:
+    - /mcp/chucknorris
+- name: registry-mcp-service
+  url: https://klabs.us.api.konghq.com
+  routes:
+  - name: registry-mcp
+    paths:
+    - /mcp/registry
+    strip_path: true
+- name: fetch-mcp-service
+  url: https://remote.mcpservers.org/fetch/mcp
+  routes:
+  - name: fetch-mcp-route
+    paths:
+    - /mcp/fetch
