@@ -15,9 +15,12 @@ The Model Context Protocol (MCP) is an open standard that enables AI application
 ```
 kong-mcp-gateway-examples/
 ├── mcp-proxy/          # MCP proxy pattern examples
+│   ├── kong-config/    # Kong Gateway configuration
+│   └── openapi.yaml    # Chuck Norris API OpenAPI specification
 ├── mcp-registry/       # MCP registry integration examples
-├── example/            # Basic Kong AI Gateway usage
-└── openapi.yaml        # Chuck Norris API OpenAPI specification
+│   ├── kong-config/    # Kong Gateway configuration
+│   └── volcano-agent/  # AI agent using Volcano SDK
+└── example/            # Basic Kong AI Gateway usage
 ```
 
 ## 🚀 Quick Start
