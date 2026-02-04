@@ -1,0 +1,62 @@
+_format_version: "3.0"
+services:
+  - name: openweathermap-mcp
+    url: http://api.openweathermap.org/data/2.5/weather
+    routes:
+      - name: openweathermap-direct
+        paths:
+          - /weather
+        strip_path: true
+        plugins:
+          - name: request-transformer-advanced
+            enabled: true
+            config:
+              add:
+                querystring:
+                  - appId:<your_app_id>
+      - name: openweathermap-mcp
+        service:
+          name: openweathermap
+        paths:
+          - /weather-mcp
+          - /.well-known/oauth-protected-resource/weather-mcp
+        plugins:
+          - name: request-transformer-advanced
+            enabled: true
+            config:
+              add:
+                querystring:
+                  - appId:<your_app_id>
+          - name: ai-mcp-proxy
+            tags:
+              - agg-mcp-tools
+            config:
+              mode: conversion-listener
+              logging:
+                log_payloads: true
+                log_statistics: true
+              tools:
+                - description: Get weather for a city
+                  annotations:
+                    title: Get weather for a city
+                  method: GET
+                  path: /weather
+                  parameters:
+                    - name: q
+                      in: query
+                      description: City name or coordinates (latitude, longitude)
+                      required: true
+                      schema:
+                        type: string
+                    - name: units
+                      in: query
+                      description: Units for temperature (imperial, metric, standard)
+                      required: false
+                      schema:
+                        type: string
+                    - name: lang
+                      in: query
+                      description: Language (e.g., en, es, fr)
+                      required: false
+                      schema:
+                        type: string

@@ -3,7 +3,7 @@ vaults:
   - name: konnect
     prefix: kv
     config:
-      config_store_id: a3a8af24-7515-4db1-a9d6-a4a169d4ea73
+      config_store_id: <your_config_store_id>
 plugins:
   - name: request-transformer-advanced
     instance_name: registry-api-auth-headers
