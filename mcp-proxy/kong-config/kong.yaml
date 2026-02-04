@@ -8,23 +8,6 @@ plugins:
     mode: conversion-listener
     tools:
     - annotations:
-        title: MCP Registry Servers List
-      description: Retrieve MCP servers in the registry.
-      method: GET
-      host: klabs.us.api.konghq.com:443
-      path: /v0/registries/b5fb0a06-10d6-412a-817f-ad629289916a/v0.1/servers
-      scheme: https
-  enabled: true
-  name: ai-mcp-proxy
-  route: registry-mcp
-- config:
-    logging:
-      log_payloads: true
-      log_statistics: true
-    max_request_body_size: 16384
-    mode: conversion-listener
-    tools:
-    - annotations:
         title: Chuck Norris Random Joke
       description: Retrieve a random chuck joke in JSON format.
       method: GET
@@ -61,13 +44,6 @@ services:
   - name: chucknorris-mcp
     paths:
     - /mcp/chucknorris
-- name: registry-mcp-service
-  url: https://klabs.us.api.konghq.com
-  routes:
-  - name: registry-mcp
-    paths:
-    - /mcp/registry
-    strip_path: true
 - name: fetch-mcp-service
   url: https://remote.mcpservers.org/fetch/mcp
   routes:

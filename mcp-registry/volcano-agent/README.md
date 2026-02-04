@@ -30,8 +30,8 @@ A simple Node.js application using the Volcano SDK to search for MCP servers and
 # Get a Chuck Norris joke about history (default)
 npm run dev
 
-# Get a Chuck Norris joke about programming
-npm run dev -- --topic programming
+# Get a Chuck Norris joke about career
+npm run dev -- --topic career
 
 # Search for GitHub issues MCP servers
 npm run dev -- --search-type github-issues
@@ -51,8 +51,8 @@ npm run dev -- --debug
 
 ```bash
 # Different joke topics
-npm run dev -- -t "space exploration"
-npm run dev -- -t "artificial intelligence"
+npm run dev -- -t "animal"
+npm run dev -- -t "science"
 
 # GitHub issues search with debug
 npm run dev -- -s github-issues --debug
