@@ -21,10 +21,48 @@ plugins:
       tools:
         - annotations:
             title: MCP Registry Servers List
-          description: Retrieve MCP servers in the registry.
+          description: Returns a list of all registered MCP servers
+          parameters:
+          - name: cursor
+            in: query
+            description: |
+              Pagination cursor for retrieving next set of results.
+
+              Cursors are opaque strings returned in the `metadata.nextCursor` field of paginated responses. Always use the exact cursor value returned by the API.
+            required: false
+            schema:
+              type: string
+          - name: limit
+            in: query
+            description: Maximum number of items to return
+            required: false
+            schema:
+              type: integer
+          - name: search
+            in: query
+            description: Search servers by name (substring match)
+            required: false
+            schema:
+              type: string
+              example: "filesystem"
+          - name: updated_since
+            in: query
+            description: Filter servers updated since timestamp (RFC3339 datetime)
+            required: false
+            schema:
+              type: string
+              format: date-time
+              example: "2025-08-07T13:15:04.280Z"
+          - name: version
+            in: query
+            description: Filter by version ('latest' for latest version, or an exact version like '1.2.3')
+            required: false
+            schema:
+              type: string
+              example: "1.2.3"
           method: GET
           host: host.docker.internal
-          path: /api/registry/v0/registries/b5fb0a06-10d6-412a-817f-ad629289916a/v0.1/servers
+          path: /api/registry/v0/registries/b5fb0a06-10d6-412a-817f-ad629289916a/v0/servers
           scheme: https
     enabled: true
     name: ai-mcp-proxy
