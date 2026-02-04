@@ -11,10 +11,6 @@ interface MCPServer {
 const CONFIG = {
   MODEL: "gpt-4o-mini",
   REGISTRY_URL: "http://localhost:8000/mcp/registry",
-  PROMPTS: {
-    CHUCK_NORRIS: "Search for a MCP server that handles chuck norris jokes. Include url, name, and description for each server.",
-    GITHUB_ISSUES: "Return all MCP servers that allow me to check my github issues. Include url, name, and description for each server.",
-  }
 } as const;
 
 // Simple logging
@@ -33,24 +29,55 @@ const log = {
 // Parse CLI args
 function parseArgs() {
   const args = process.argv.slice(2);
-  const options = { searchType: 'chuck-norris', topic: 'history', debug: false };
+  const options = {
+    prompt: '',
+    debug: false
+  };
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (arg === '--search-type' || arg === '-s') options.searchType = args[++i] || 'chuck-norris';
-    else if (arg === '--topic' || arg === '-t') options.topic = args[++i] || 'history';
-    else if (arg === '--debug' || arg === '-d') { options.debug = true; process.env.DEBUG = 'true'; }
-    else if (arg === '--help' || arg === '-h') {
+    if (arg === '--prompt' || arg === '-p') {
+      options.prompt = args[++i] || '';
+    } else if (arg === '--debug' || arg === '-d') {
+      options.debug = true;
+      process.env.DEBUG = 'true';
+    } else if (arg === '--help' || arg === '-h') {
       console.log(`
 Usage: npm run dev [options]
-  -s, --search-type <type>    'chuck-norris' or 'github-issues' (default: chuck-norris)
-  -t, --topic <topic>         Topic for jokes (default: history)
-  -d, --debug                 Enable debug logging
-  -h, --help                  Show help
+
+Options:
+  -p, --prompt <prompt>    Free-form prompt for your request
+                           The agent will search for appropriate MCP servers
+                           and execute your request
+                           Example: "Tell me a Chuck Norris joke about programming"
+
+  -d, --debug              Enable debug logging
+  -h, --help               Show this help message
+
+Examples:
+  # Get a Chuck Norris joke
+  npm run dev -- -p "Tell me a Chuck Norris joke about history"
+
+  # Check GitHub issues
+  npm run dev -- -p "Show me my GitHub issues"
+
+  # Get weather information
+  npm run dev -- -p "What's the weather in Tokyo?"
+
+  # With debug logging
+  npm run dev -- -p "Tell me a joke about science" --debug
 `);
       process.exit(0);
     }
   }
+
+  // Validate required arguments
+  if (!options.prompt) {
+    log.error('Prompt is required. Use -p or --prompt to provide your request.');
+    log.info('Run with --help for usage information.');
+    process.exit(1);
+  }
+
   return options;
 }
 
@@ -61,7 +88,7 @@ async function searchMCPServers(structuredLlm: LLMHandle, query: string): Promis
   try {
     const registryMcp = mcp(CONFIG.REGISTRY_URL);
     const results = await agent({ llm: structuredLlm })
-      .then({ prompt: query, mcps: [registryMcp] })
+      .then({ prompt: "search for MCP servers to address this request using only one word no spaces: " + query, mcps: [registryMcp] })
       .run();
 
     if (results[0]?.toolCalls) {
@@ -79,20 +106,20 @@ async function searchMCPServers(structuredLlm: LLMHandle, query: string): Promis
   }
 }
 
-// Get a joke from Chuck Norris MCP server
-async function getJoke(llm: LLMHandle, serverUrl: string, topic: string): Promise<string> {
-  log.info(`Getting Chuck Norris joke about: ${topic}`, '😄');
+// Execute action with MCP server
+async function executeAction(llm: LLMHandle, serverUrl: string, actionPrompt: string): Promise<string> {
+  log.info(`Executing action: ${actionPrompt}`, '🎯');
 
   try {
     const mcpServer = mcp(serverUrl);
     const results = await agent({ llm })
-      .then({ prompt: `Tell me a Chuck Norris joke about ${topic}`, mcps: [mcpServer] })
+      .then({ prompt: actionPrompt, mcps: [mcpServer] })
       .run();
 
-    return results[results.length - 1]?.llmOutput || 'No joke received';
+    return results[results.length - 1]?.llmOutput || 'No response received';
   } catch (error) {
-    log.error(`Error getting joke: ${error}`);
-    return 'Failed to get joke';
+    log.error(`Error executing action: ${error}`);
+    return 'Failed to execute action';
   }
 }
 
@@ -100,7 +127,7 @@ async function getJoke(llm: LLMHandle, serverUrl: string, topic: string): Promis
 async function main() {
   try {
     const options = parseArgs();
-    log.info(`Starting Volcano Agent for ${options.searchType}`, '🌋');
+    log.info('Starting Volcano Agent', '🌋');
     log.debug('CLI options', options);
 
     // Validate API key
@@ -143,30 +170,25 @@ async function main() {
       }
     });
 
-    // Search for MCP servers
-    const searchQuery = options.searchType === 'chuck-norris' ? CONFIG.PROMPTS.CHUCK_NORRIS : CONFIG.PROMPTS.GITHUB_ISSUES;
-    const mcpServers = await searchMCPServers(structuredLlm, searchQuery);
+    // Search for MCP servers using the provided prompt
+    const mcpServers = await searchMCPServers(structuredLlm, options.prompt);
 
     log.info(`Found ${mcpServers.length} MCP servers`, '📋');
     log.debug('MCP servers details', mcpServers);
 
     if (mcpServers.length === 0) {
-      log.error(`No MCP servers found for ${options.searchType}`);
+      log.error('No MCP servers found matching your request');
       process.exit(1);
     }
 
     const selectedServer = mcpServers[0];
     log.success(`Using MCP server: ${selectedServer.name} (${selectedServer.url})`);
+    log.info(`Description: ${selectedServer.description}`);
 
-    if (options.searchType === 'chuck-norris') {
-      const joke = await getJoke(llm, selectedServer.url, options.topic);
-      log.info('\nChuck Norris Joke:', '🎭');
-      console.log(joke);
-    } else {
-      log.info('GitHub issues MCP server found');
-      log.info(`Server URL: ${selectedServer.url}`);
-      log.info(`Description: ${selectedServer.description}`);
-    }
+    // Execute the user's request with the found server
+    const result = await executeAction(llm, selectedServer.url, options.prompt);
+    log.info('\nResult:', '✨');
+    console.log(result);
 
     log.success('Application completed successfully', '🎉');
 
