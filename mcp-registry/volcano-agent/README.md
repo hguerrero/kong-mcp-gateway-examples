@@ -88,17 +88,25 @@ npm start
 
 ## Architecture
 
-Simple single-file application with everything included:
+Minimal single-file application (~140 lines):
 
 - **`src/agent.ts`** - Complete application in one file
 
+### Code Structure
+
+1. **Configuration** (lines 3-6): Model, registry URL, debug flag
+2. **CLI Parsing** (lines 14-40): Get user prompt from command line
+3. **Find Server** (lines 42-60): Search registry for appropriate MCP server
+4. **Execute Request** (lines 62-72): Run user request on found server
+5. **Main Flow** (lines 74-139): Orchestrate the entire process
+
 ### Key Features
 
-1. **Type Safety**: TypeScript interfaces for MCP servers
-2. **Error Handling**: Try-catch blocks with graceful failures
-3. **Environment Validation**: Checks for required API key
-4. **Structured Responses**: JSON Schema for reliable API responses
-5. **Simple Design**: All functionality in one readable file
+1. **Minimal Code**: ~140 lines of clean, focused code
+2. **No Classes**: Simple functions and arrow functions
+3. **Structured Responses**: JSON Schema for reliable server discovery
+4. **Error Handling**: Simple try-catch with clear error messages
+5. **Debug Mode**: Optional detailed logging via `--debug` flag
 
 ## Configuration
 
@@ -117,7 +125,8 @@ You can also enable debug mode using the `--debug` CLI flag.
 
 ## Technical Details
 
-- **ES Modules**: Configured as ES module with top-level await support
-- **TypeScript**: ES2022 target with proper module resolution
-- **JSON Schema**: Structured outputs with validation
-- **Error Recovery**: Graceful handling of API failures
+- **ES Modules**: Top-level await with IIFE pattern
+- **TypeScript**: ES2022 target, minimal type annotations
+- **JSON Schema**: Structured outputs for server discovery
+- **Functional Style**: Arrow functions, no classes
+- **~140 Lines**: Entire application in one focused file

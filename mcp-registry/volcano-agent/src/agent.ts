@@ -1,151 +1,97 @@
-import { agent, LLMHandle, llmOpenAI, llmOpenAIResponses, mcp } from "volcano-sdk";
-
-// Types
-interface MCPServer {
-  url: string;
-  name: string;
-  description: string;
-}
+import { agent, llmOpenAI, llmOpenAIResponses, mcp } from "volcano-sdk";
 
 // Configuration
-const CONFIG = {
-  MODEL: "gpt-4o-mini",
-  REGISTRY_URL: "http://localhost:8000/mcp/registry",
-} as const;
+const MODEL = "gpt-4o-mini";
+const REGISTRY_URL = "http://localhost:8000/mcp/registry";
+const DEBUG = process.argv.includes('--debug') || process.argv.includes('-d');
 
-// Simple logging
-const log = {
-  info: (msg: string, emoji = 'ℹ️') => console.log(`${emoji} ${msg}`),
-  success: (msg: string, emoji = '✅') => console.log(`${emoji} ${msg}`),
-  error: (msg: string, emoji = '❌') => console.error(`${emoji} ${msg}`),
-  debug: (msg: string, data?: any, emoji = '🔍') => {
-    if (process.env.DEBUG === 'true') {
-      console.log(`${emoji} ${msg}`);
-      if (data) console.log(JSON.stringify(data, null, 2));
-    }
-  }
+// Logging
+const log = (msg: string, data?: any) => {
+  console.log(msg);
+  if (DEBUG && data) console.log(JSON.stringify(data, null, 2));
 };
 
-// Parse CLI args
-function parseArgs() {
+// Get prompt from CLI
+const getPrompt = (): string => {
   const args = process.argv.slice(2);
-  const options = {
-    prompt: '',
-    debug: false
-  };
 
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (arg === '--prompt' || arg === '-p') {
-      options.prompt = args[++i] || '';
-    } else if (arg === '--debug' || arg === '-d') {
-      options.debug = true;
-      process.env.DEBUG = 'true';
-    } else if (arg === '--help' || arg === '-h') {
-      console.log(`
-Usage: npm run dev [options]
-
-Options:
-  -p, --prompt <prompt>    Free-form prompt for your request
-                           The agent will search for appropriate MCP servers
-                           and execute your request
-                           Example: "Tell me a Chuck Norris joke about programming"
-
-  -d, --debug              Enable debug logging
-  -h, --help               Show this help message
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log(`
+Usage: npm run dev -- -p "<your request>"
 
 Examples:
-  # Get a Chuck Norris joke
   npm run dev -- -p "Tell me a Chuck Norris joke about history"
-
-  # Check GitHub issues
   npm run dev -- -p "Show me my GitHub issues"
-
-  # Get weather information
   npm run dev -- -p "What's the weather in Tokyo?"
-
-  # With debug logging
-  npm run dev -- -p "Tell me a joke about science" --debug
+  npm run dev -- -p "Tell me a joke" --debug
 `);
-      process.exit(0);
-    }
+    process.exit(0);
   }
 
-  // Validate required arguments
-  if (!options.prompt) {
-    log.error('Prompt is required. Use -p or --prompt to provide your request.');
-    log.info('Run with --help for usage information.');
+  const promptIndex = args.findIndex(arg => arg === '-p' || arg === '--prompt');
+  const prompt = promptIndex >= 0 ? args[promptIndex + 1] : '';
+
+  if (!prompt) {
+    console.error('❌ Prompt required. Use: npm run dev -- -p "your request"');
     process.exit(1);
   }
 
-  return options;
-}
+  return prompt;
+};
 
-// Search for MCP servers
-async function searchMCPServers(structuredLlm: LLMHandle, query: string): Promise<MCPServer[]> {
-  log.info(`Searching for MCP servers: ${query}`, '🔍');
+// Search for MCP servers in registry
+const findMCPServer = async (llm: any, userPrompt: string) => {
+  log('🔍 Searching for MCP servers...');
 
-  try {
-    const registryMcp = mcp(CONFIG.REGISTRY_URL);
-    const results = await agent({ llm: structuredLlm })
-      .then({ prompt: "search for MCP servers to address this request using only one word no spaces: " + query, mcps: [registryMcp] })
-      .run();
+  const registryMcp = mcp(REGISTRY_URL);
+  const results = await agent({ llm })
+    .then({
+      prompt: `search for MCP servers to address this request using only one word no spaces: ${userPrompt}`,
+      mcps: [registryMcp]
+    })
+    .run();
 
-    if (results[0]?.toolCalls) {
-      log.debug('Tool calls from first result', results[0].toolCalls, '🔧');
-    }
-
-    const lastResult = results[results.length - 1];
-    if (!lastResult?.llmOutput) throw new Error('No LLM output received');
-
-    const response = JSON.parse(lastResult.llmOutput || '{"data":[]}');
-    return response.data || [];
-  } catch (error) {
-    log.error(`Error searching MCP servers: ${error}`);
-    return [];
+  if (DEBUG && results[0]?.toolCalls) {
+    log('Tool calls:', results[0].toolCalls);
   }
-}
 
-// Execute action with MCP server
-async function executeAction(llm: LLMHandle, serverUrl: string, actionPrompt: string): Promise<string> {
-  log.info(`Executing action: ${actionPrompt}`, '🎯');
+  const response = JSON.parse(results[results.length - 1]?.llmOutput || '{"data":[]}');
+  return response.data?.[0];
+};
 
+// Execute user request with MCP server
+const executeRequest = async (llm: any, serverUrl: string, userPrompt: string) => {
+  log('🎯 Executing request...');
+
+  const mcpServer = mcp(serverUrl);
+  const results = await agent({ llm })
+    .then({ prompt: userPrompt, mcps: [mcpServer] })
+    .run();
+
+  return results[results.length - 1]?.llmOutput || 'No response';
+};
+
+// Main
+(async () => {
   try {
-    const mcpServer = mcp(serverUrl);
-    const results = await agent({ llm })
-      .then({ prompt: actionPrompt, mcps: [mcpServer] })
-      .run();
-
-    return results[results.length - 1]?.llmOutput || 'No response received';
-  } catch (error) {
-    log.error(`Error executing action: ${error}`);
-    return 'Failed to execute action';
-  }
-}
-
-// Main function
-async function main() {
-  try {
-    const options = parseArgs();
-    log.info('Starting Volcano Agent', '🌋');
-    log.debug('CLI options', options);
-
-    // Validate API key
+    const userPrompt = getPrompt();
     const apiKey = process.env.OPENAI_API_KEY;
+
     if (!apiKey) {
-      log.error('OPENAI_API_KEY environment variable is required');
+      console.error('❌ OPENAI_API_KEY environment variable required');
       process.exit(1);
     }
 
-    // Create LLM instances
-    const llm = llmOpenAI({ apiKey, model: CONFIG.MODEL });
+    log('🌋 Starting Volcano Agent');
+    if (DEBUG) log('Prompt:', userPrompt);
+
+    // Create LLM for structured responses (finding servers)
     const structuredLlm = llmOpenAIResponses({
       apiKey,
-      model: CONFIG.MODEL,
+      model: MODEL,
       options: {
         jsonSchema: {
-          name: "mcp_response",
-          description: "MCP Server information",
+          name: "mcp_servers",
           schema: {
             type: "object",
             properties: {
@@ -170,36 +116,28 @@ async function main() {
       }
     });
 
-    // Search for MCP servers using the provided prompt
-    const mcpServers = await searchMCPServers(structuredLlm, options.prompt);
+    // Find MCP server
+    const server = await findMCPServer(structuredLlm, userPrompt);
 
-    log.info(`Found ${mcpServers.length} MCP servers`, '📋');
-    log.debug('MCP servers details', mcpServers);
-
-    if (mcpServers.length === 0) {
-      log.error('No MCP servers found matching your request');
+    if (!server) {
+      console.error('❌ No MCP server found for your request');
       process.exit(1);
     }
 
-    const selectedServer = mcpServers[0];
-    log.success(`Using MCP server: ${selectedServer.name} (${selectedServer.url})`);
-    log.info(`Description: ${selectedServer.description}`);
+    log(`✅ Using: ${server.name} (${server.url})`);
+    if (DEBUG) log('Server:', server);
 
-    // Execute the user's request with the found server
-    const result = await executeAction(llm, selectedServer.url, options.prompt);
-    log.info('\nResult:', '✨');
+    // Execute request
+    const llm = llmOpenAI({ apiKey, model: MODEL });
+    const result = await executeRequest(llm, server.url, userPrompt);
+
+    console.log('\n✨ Result:');
     console.log(result);
 
-    log.success('Application completed successfully', '🎉');
+    process.exit(0);
 
   } catch (error) {
-    log.error(`Fatal error: ${error}`, '💥');
+    console.error('❌ Error:', error);
     process.exit(1);
   }
-}
-
-// Run the application
-main().catch(error => {
-  log.error(`Unhandled error: ${error}`, '🚨');
-  process.exit(1);
-});
+})();
