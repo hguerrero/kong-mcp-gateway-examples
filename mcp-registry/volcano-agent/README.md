@@ -123,7 +123,7 @@ export REGISTRY_ID=$(curl -s "https://localhost:8443/api/registry/v0/registries"
 2. Then register the weather MCP server:
 
 ```bash
-curl -X POST "https://localhost:8443/api/registry/v0/registries/$REGISTRY_ID/v0.1/publish" \
+curl -X POST "http://localhost:8000/api/registry/v0/registries/$REGISTRY_ID/v0.1/publish" \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Weather MCP",
@@ -133,10 +133,10 @@ curl -X POST "https://localhost:8443/api/registry/v0/registries/$REGISTRY_ID/v0.
     "remotes": [
       {
         "type": "streamable-http",
-        "url": "https://kong-cce4833017usigp19.kongcloud.dev/weather-mcp"
+        "url": "http://localhost:8000/weather-mcp"
       }
     ]
-  }' --insecure  
+  }'
 ```
 
 This registers the weather MCP server so the agent can automatically discover and use it when you ask weather-related questions.
