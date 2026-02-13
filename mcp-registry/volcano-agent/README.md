@@ -108,6 +108,51 @@ Minimal single-file application (~140 lines):
 4. **Error Handling**: Simple try-catch with clear error messages
 5. **Debug Mode**: Optional detailed logging via `--debug` flag
 
+## Registering MCP Servers
+
+Before using the agent, you'll need to register MCP servers with the registry. Here's how to register the OpenWeatherMap weather MCP using the Kong platform API:
+
+1. First, query and export the registry ID as an environment variable:
+
+```bash
+export REGISTRY_ID=$(curl -s "https://localhost:8443/api/registry/v0/registries" \
+  -H "Content-Type: application/json" \
+  --insecure | jq -r '.data[] | select(.name == "dev-mcp-registry") | .id')
+```
+
+2. Then register the weather MCP server:
+
+```bash
+curl -X POST "https://localhost:8443/api/registry/v0/registries/$REGISTRY_ID/v0.1/publish" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Weather MCP",
+    "name": "org.openweathermap.api/weather",
+    "description": "Get the weather for a city",
+    "version": "2.5",
+    "remotes": [
+      {
+        "type": "streamable-http",
+        "url": "https://kong-cce4833017usigp19.kongcloud.dev/weather-mcp"
+      }
+    ]
+  }' --insecure  
+```
+
+This registers the weather MCP server so the agent can automatically discover and use it when you ask weather-related questions.
+
+## Cleanup
+
+To remove the registered MCP server from the registry:
+
+```bash
+curl -X DELETE "https://localhost:8443/api/registry/v0/registries/$REGISTRY_ID/v0.1/servers/org.openweathermap.api%2Fweather/versions/2.5" \
+  -H "Content-Type: application/json" \
+  --insecure
+```
+
+This will delete the weather MCP server and its version from the registry.
+
 ## Configuration
 
 The application supports the following environment variables:

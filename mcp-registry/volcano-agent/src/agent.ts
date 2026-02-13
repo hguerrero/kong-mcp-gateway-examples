@@ -28,7 +28,7 @@ Examples:
     process.exit(0);
   }
 
-  const promptIndex = args.findIndex(arg => arg === '-p' || arg === '--prompt');
+  const promptIndex = args.findIndex((arg: string) => arg === '-p' || arg === '--prompt');
   const prompt = promptIndex >= 0 ? args[promptIndex + 1] : '';
 
   if (!prompt) {
