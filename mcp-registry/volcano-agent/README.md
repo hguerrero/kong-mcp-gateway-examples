@@ -10,6 +10,7 @@ A simple Node.js application using the Volcano SDK that automatically finds the 
 - 🛠️ **Simple CLI**: One prompt, that's all you need
 - 🔧 **Debug Mode**: Optional detailed logging
 - 📦 **Simple Architecture**: Everything in one file for easy understanding
+- 🌐 **Web UI**: Modern web interface for easy configuration and execution
 
 ## Setup
 
@@ -75,6 +76,46 @@ npm run dev -- --help
 3. It selects the best matching server
 4. It executes your request using that server
 5. You get the result - simple!
+
+## Web UI
+
+The Volcano Agent includes a modern web interface for easier configuration and execution without using command line arguments or environment variables.
+
+### Starting the Web UI
+
+```bash
+# Run in development mode
+npm run ui
+
+# Or build and run the compiled version
+npm run ui:build
+```
+
+Then open your browser to `http://localhost:3000`
+
+### Web UI Features
+
+- **Prompt Input**: Enter your natural language request
+- **Configuration Panel**: Set OpenAI API Key, Registry URL, OpenAI Model, and OpenAI Base URL
+- **Save Configuration**: Store settings in browser local storage
+- **Debug Mode**: Toggle detailed logging
+- **Example Prompts**: Quick buttons for common requests
+- **Real-time Results**: See which MCP server was used and the response
+
+### Configuration Options
+
+- **OpenAI API Key** (required): Your OpenAI API key
+- **Registry URL** (required): The MCP registry endpoint (e.g., `http://localhost:8000/mcp/registry`)
+- **OpenAI Model** (optional): The model to use (defaults to `gpt-4o-mini`). Other options include `gpt-4`, `gpt-4o`, etc.
+- **OpenAI Base URL** (optional): Custom base URL for OpenAI API (defaults to OpenAI's official endpoint). Useful for using proxies or alternative OpenAI-compatible APIs.
+
+### Benefits of Web UI
+
+- No environment variables needed
+- No command line arguments
+- Visual feedback and error handling
+- Persistent configuration
+- Modern, responsive design
 
 ### Production
 
@@ -167,6 +208,8 @@ You can also enable debug mode using the `--debug` CLI flag.
 - `npm run build` - Compile TypeScript to JavaScript in the `dist/` folder
 - `npm start` - Run the compiled JavaScript from `dist/agent.js`
 - `npm run clean` - Remove the `dist/` folder
+- `npm run ui` - Start the web UI server in development mode
+- `npm run ui:build` - Build and run the compiled web UI server
 
 ## Technical Details
 

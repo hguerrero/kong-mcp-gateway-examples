@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volcano Agent - Kong</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* Kong 2026 Brand Colors - Dark Theme:
+           Primary Lime Green: #CAFE00
+           Dark Background: #0a0a0a
+           Card Background: #141414
+           Border: #2a2a2a
+           Text: #ffffff
+           Secondary Text: #a0a0a0
+        */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            color: #ffffff;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding-top: 8px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .kong-mark {
+            width: 48px;
+            height: 48px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .subtitle {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: #141414;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #a0a0a0;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #CAFE00;
+            box-shadow: 0 0 0 3px rgba(202, 254, 0, 0.15);
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #CAFE00;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            font-size: 0.85rem;
+            cursor: pointer;
+            color: #ffffff;
+        }
+
+        .btn {
+            background: #CAFE00;
+            color: #0a0a0a;
+            border: none;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            background: #b8e800;
+            box-shadow: 0 0 20px rgba(202, 254, 0, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            background: #404040;
+            box-shadow: none;
+        }
+
+        .result-card {
+            display: none;
+            background: #141414;
+            border: 2px solid #CAFE00;
+            margin-top: 16px;
+            box-shadow: 0 0 30px rgba(202, 254, 0, 0.1);
+        }
+
+        .result-card.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .error-card {
+            display: none;
+            background: #1a0a0a;
+            border: 1px solid #ef4444;
+            margin-top: 16px;
+        }
+
+        .error-card.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(202, 254, 0, 0.2);
+            border-top-color: #CAFE00;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        .server-info {
+            background: #1a1a1a;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            border-left: 4px solid #CAFE00;
+            color: #a0a0a0;
+        }
+
+        .server-info strong {
+            color: #CAFE00;
+            font-weight: 600;
+        }
+
+        .result-content {
+            background: #1a1a1a;
+            padding: 16px;
+            border-radius: 6px;
+            line-height: 1.7;
+            font-size: 0.9rem;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #2a2a2a;
+        }
+
+        /* Markdown Styles - Dark Theme */
+        .result-content h1, .result-content h2, .result-content h3, 
+        .result-content h4, .result-content h5, .result-content h6 {
+            color: #ffffff;
+            margin: 20px 0 12px 0;
+            font-weight: 600;
+        }
+
+        .result-content h1 { font-size: 1.5rem; }
+        .result-content h2 { font-size: 1.3rem; }
+        .result-content h3 { font-size: 1.1rem; }
+
+        .result-content p {
+            margin: 10px 0;
+            color: #d0d0d0;
+        }
+
+        .result-content ul, .result-content ol {
+            margin: 10px 0;
+            padding-left: 24px;
+        }
+
+        .result-content li {
+            margin: 6px 0;
+            color: #d0d0d0;
+        }
+
+        .result-content code {
+            background: #2a2a2a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 0.85em;
+            color: #CAFE00;
+            font-weight: 600;
+        }
+
+        .result-content pre {
+            background: #0a0a0a;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 12px 0;
+            border: 1px solid #2a2a2a;
+        }
+
+        .result-content pre code {
+            background: none;
+            padding: 0;
+            color: #CAFE00;
+            font-weight: 400;
+        }
+
+        .result-content blockquote {
+            border-left: 4px solid #CAFE00;
+            padding-left: 16px;
+            margin: 12px 0;
+            color: #a0a0a0;
+            font-style: italic;
+        }
+
+        .result-content a {
+            color: #CAFE00;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .result-content a:hover {
+            text-decoration: underline;
+        }
+
+        .result-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.85rem;
+        }
+
+        .result-content th, .result-content td {
+            padding: 10px 12px;
+            border: 1px solid #2a2a2a;
+            text-align: left;
+        }
+
+        .result-content th {
+            background: #1a1a1a;
+            font-weight: 600;
+            color: #CAFE00;
+        }
+
+        .result-content td {
+            color: #d0d0d0;
+        }
+
+        .result-content tr:nth-child(even) {
+            background: #1a1a1a;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .examples {
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .examples-label {
+            color: #a0a0a0;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-right: 4px;
+        }
+
+        .example-btn {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            color: #a0a0a0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .example-btn:hover {
+            background: #CAFE00;
+            border-color: #CAFE00;
+            color: #0a0a0a;
+            font-weight: 600;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sidebar .form-group {
+            margin-bottom: 10px;
+        }
+
+        .sidebar input {
+            font-size: 0.85rem;
+            padding: 8px 10px;
+        }
+
+        .config-options {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            margin-top: 10px;
+            padding-top: 12px;
+            border-top: 1px solid #2a2a2a;
+        }
+
+        .compact-section {
+            font-size: 0.85rem;
+        }
+
+        .compact-section label {
+            font-size: 0.8rem;
+        }
+
+        .result-wrapper {
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <svg class="kong-mark" viewBox="0 0 190 170" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M62.252 139.486L57.5955 145.372L68.1307 161.766L67.0323 169.347H111.726L114.82 161.766L96.8434 139.486H62.252Z" fill="#CAFE00"/>
+                    <path d="M86.6949 39.7212L70.5286 67.902L149.38 160.826L147.137 169.347H183.306L189.85 139.117L105.476 39.7058L86.6949 39.7212Z" fill="#CAFE00"/>
+                    <path d="M97.4312 18.5355L89.7426 32.6336H108.817L141.552 71.4304L161.014 55.5142V45.4067L154.253 35.9463L159.25 30.7693L120.203 0L97.4312 18.5355Z" fill="#CAFE00"/>
+                    <path d="M38.7374 97.0689H28.0784L0 132.568V169.347H30.1205L35.4422 162.459L58.6784 132.491H92.2951L102.645 116.698L66.1969 73.6183L38.7374 97.0689Z" fill="#CAFE00"/>
+                </svg>
+                <h1>Volcano Agent</h1>
+            </div>
+            <p class="subtitle">MCP Server Discovery & Execution</p>
+        </header>
+
+        <div class="main-grid">
+            <div class="left-column">
+                <div class="card">
+                    <div class="card-title">Your Request</div>
+                    <div class="form-group">
+                        <textarea id="prompt" placeholder="What would you like to do? e.g., Tell me a Chuck Norris joke, What's the weather in Tokyo?"></textarea>
+                    </div>
+                    <div class="examples">
+                        <span class="examples-label">Examples:</span>
+                        <button class="example-btn" onclick="setPrompt('Tell me a Chuck Norris joke about history')">Chuck Norris joke</button>
+                        <button class="example-btn" onclick="setPrompt('What\'s the weather in Tokyo?')">Weather in Tokyo</button>
+                        <button class="example-btn" onclick="setPrompt('Show me my GitHub issues')">GitHub issues</button>
+                    </div>
+                </div>
+
+                <button class="btn" id="runBtn" onclick="runAgent()">
+                    Run Agent
+                </button>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Processing...</p>
+                </div>
+
+                <div class="card result-card" id="resultCard">
+                    <div class="card-title">Result</div>
+                    <div class="server-info" id="serverInfo"></div>
+                    <div class="result-content" id="resultContent"></div>
+                </div>
+
+                <div class="card error-card" id="errorCard">
+                    <div class="card-title">Error</div>
+                    <div class="result-content" id="errorContent"></div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="card compact-section">
+                    <div class="card-title">Configuration</div>
+                    
+                    <div class="form-group">
+                        <label for="apiKey">OpenAI API Key *</label>
+                        <input type="password" id="apiKey" placeholder="sk-...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registryUrl">Registry URL *</label>
+                        <input type="text" id="registryUrl" placeholder="http://localhost:8000/mcp/registry">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="openaiBaseUrl">OpenAI Base URL</label>
+                        <input type="text" id="openaiBaseUrl" placeholder="https://api.openai.com/v1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="openaiModel">OpenAI Model</label>
+                        <input type="text" id="openaiModel" placeholder="gpt-4o-mini">
+                    </div>
+
+                    <div class="config-options">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="saveConfig">
+                            <label for="saveConfig">Save config</label>
+                        </div>
+
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="debug">
+                            <label for="debug">Debug mode</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load saved configuration
+        window.onload = function() {
+            const savedConfig = localStorage.getItem('volcanoAgentConfig');
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                if (config.apiKey) document.getElementById('apiKey').value = config.apiKey;
+                if (config.registryUrl) document.getElementById('registryUrl').value = config.registryUrl;
+                if (config.openaiModel) document.getElementById('openaiModel').value = config.openaiModel;
+                if (config.openaiBaseUrl) document.getElementById('openaiBaseUrl').value = config.openaiBaseUrl;
+            }
+        };
+
+        function setPrompt(text) {
+            document.getElementById('prompt').value = text;
+        }
+
+        async function runAgent() {
+            const prompt = document.getElementById('prompt').value.trim();
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const registryUrl = document.getElementById('registryUrl').value.trim() || 'http://localhost:8000/mcp/registry';
+            const openaiModel = document.getElementById('openaiModel').value.trim();
+            const openaiBaseUrl = document.getElementById('openaiBaseUrl').value.trim();
+            const debug = document.getElementById('debug').checked;
+            const saveConfig = document.getElementById('saveConfig').checked;
+
+            // Validation
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
+
+            if (!apiKey) {
+                alert('Please enter your OpenAI API Key');
+                return;
+            }
+
+            // Save configuration if requested
+            if (saveConfig) {
+                localStorage.setItem('volcanoAgentConfig', JSON.stringify({ apiKey, registryUrl, openaiModel, openaiBaseUrl }));
+            }
+
+            // Show loading
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('resultCard').classList.remove('show');
+            document.getElementById('errorCard').classList.remove('show');
+            document.getElementById('runBtn').disabled = true;
+
+            try {
+                const response = await fetch('/api/run', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prompt,
+                        apiKey,
+                        registryUrl,
+                        openaiModel,
+                        openaiBaseUrl,
+                        debug
+                    })
+                });
+
+                const data = await response.json();
+
+                document.getElementById('loading').classList.remove('show');
+
+                if (response.ok && data.success) {
+                    document.getElementById('serverInfo').innerHTML = `
+                        <strong>Server:</strong> ${data.server.name} | 
+                        <strong>URL:</strong> ${data.server.url}
+                    `;
+                    // Render markdown
+                    document.getElementById('resultContent').innerHTML = marked.parse(data.result);
+                    document.getElementById('resultCard').classList.add('show');
+                    // Scroll to result
+                    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    document.getElementById('errorContent').textContent = data.error || 'An unknown error occurred';
+                    document.getElementById('errorCard').classList.add('show');
+                }
+            } catch (error) {
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('errorContent').textContent = 'Failed to connect to server: ' + error.message;
+                document.getElementById('errorCard').classList.add('show');
+            } finally {
+                document.getElementById('runBtn').disabled = false;
+            }
+        }
+
+        // Allow Enter key to submit in textarea (Ctrl+Enter)
+        document.getElementById('prompt').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                runAgent();
+            }
+        });
+    </script>
+</body>
+</html>
