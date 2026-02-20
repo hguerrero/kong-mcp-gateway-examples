@@ -20,6 +20,11 @@ kong-mcp-gateway-examples/
 ├── mcp-registry/       # MCP registry integration examples
 │   ├── kong-config/    # Kong Gateway configuration
 │   └── volcano-agent/  # AI agent using Volcano SDK
+│       ├── src/        # TypeScript source files
+│       │   ├── agent.ts      # CLI implementation
+│       │   └── server.ts     # Web UI server
+│       ├── public/     # Web UI frontend (dark theme)
+│       └── package.json
 └── example/            # Basic Kong AI Gateway usage
 ```
 
@@ -71,6 +76,8 @@ Shows how to integrate with MCP server registries for dynamic tool discovery and
 **Components:**
 - Kong configuration for registry access
 - Volcano Agent - TypeScript AI agent using the Volcano SDK
+  - **CLI Mode**: Command-line interface for quick scripting
+  - **Web UI Mode**: Dark-themed web interface with Kong 2026 branding (neon lime green)
 - Integration with Konnect for secure credential management
 
 See [mcp-registry/README.md](mcp-registry/README.md) for detailed setup and usage.

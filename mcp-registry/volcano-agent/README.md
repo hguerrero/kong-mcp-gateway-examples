@@ -1,6 +1,6 @@
 # Volcano Agent
 
-A simple Node.js application using the Volcano SDK that automatically finds the right MCP server for your request and executes it. Just provide a single natural language prompt and the agent handles the rest.
+A simple Node.js application using the Volcano SDK that automatically finds the right MCP server for your request and executes it. Features both a CLI interface and a modern dark-themed web UI with Kong branding.
 
 ## Features
 
@@ -9,8 +9,9 @@ A simple Node.js application using the Volcano SDK that automatically finds the 
 - 🎯 **Smart Execution**: Finds the right server and executes your request automatically
 - 🛠️ **Simple CLI**: One prompt, that's all you need
 - 🔧 **Debug Mode**: Optional detailed logging
-- 📦 **Simple Architecture**: Everything in one file for easy understanding
-- 🌐 **Web UI**: Modern web interface for easy configuration and execution
+- 🌐 **Modern Web UI**: Beautiful dark-themed interface with Kong 2026 branding (neon lime green on black)
+- 📝 **Markdown Rendering**: Responses are rendered with full markdown support including code blocks, tables, and links
+- 💾 **Persistent Configuration**: Save your settings in browser local storage
 
 ## Setup
 
@@ -19,14 +20,51 @@ A simple Node.js application using the Volcano SDK that automatically finds the 
    npm install
    ```
 
-2. Set your OpenAI API key:
+2. (Optional) Set your OpenAI API key for CLI usage:
    ```bash
    export OPENAI_API_KEY="your-api-key-here"
    ```
 
 ## Usage
 
-### Basic Usage
+### Web UI (Recommended)
+
+The Web UI provides the easiest way to use the agent with a beautiful dark-themed interface:
+
+```bash
+# Run in development mode
+npm run ui
+
+# Or build and run the compiled version
+npm run ui:build
+```
+
+Then open your browser to `http://localhost:3000`
+
+#### Web UI Features
+
+- **Dark Theme**: High-contrast dark interface with Kong's signature lime green (#CAFE00) accents
+- **Markdown Rendering**: All responses are rendered with full markdown support
+- **Configuration Panel**: Set all options through the UI:
+  - OpenAI API Key (required)
+  - Registry URL (required)
+  - OpenAI Base URL (optional)
+  - OpenAI Model (optional, defaults to gpt-4o-mini)
+- **Save Configuration**: Store settings in browser local storage
+- **Debug Mode**: Toggle detailed logging
+- **Example Prompts**: Quick buttons for common requests
+- **Real-time Results**: See which MCP server was used with formatted response
+
+#### Benefits of Web UI
+
+- No environment variables or command line arguments needed
+- Visual feedback and error handling
+- Persistent configuration storage
+- Beautiful Kong-branded dark theme
+- Full markdown rendering for rich responses
+
+### CLI Usage
+
 ```bash
 # Get a Chuck Norris joke
 npm run dev -- -p "Tell me a Chuck Norris joke about history"
@@ -41,33 +79,11 @@ npm run dev -- -p "What's the weather in Tokyo?"
 npm run dev -- -p "Tell me a joke about science" --debug
 ```
 
-### Command Line Options
+#### Command Line Options
 
 - `-p, --prompt <prompt>`: **Required**. Your request in natural language
 - `-d, --debug`: Enable debug logging
 - `-h, --help`: Show help message
-
-### Examples
-
-```bash
-# Chuck Norris jokes
-npm run dev -- -p "Tell me a Chuck Norris joke about history"
-npm run dev -- -p "Give me a funny Chuck Norris joke about science"
-
-# GitHub integration
-npm run dev -- -p "Show me my open GitHub issues"
-npm run dev -- -p "List my GitHub repositories"
-
-# Weather services
-npm run dev -- -p "What's the weather forecast for New York?"
-npm run dev -- -p "Tell me the current temperature in London"
-
-# With debug logging
-npm run dev -- -p "Tell me a joke" --debug
-
-# Help
-npm run dev -- --help
-```
 
 ### How It Works
 
@@ -77,77 +93,28 @@ npm run dev -- --help
 4. It executes your request using that server
 5. You get the result - simple!
 
-## Web UI
-
-The Volcano Agent includes a modern web interface for easier configuration and execution without using command line arguments or environment variables.
-
-### Starting the Web UI
-
-```bash
-# Run in development mode
-npm run ui
-
-# Or build and run the compiled version
-npm run ui:build
-```
-
-Then open your browser to `http://localhost:3000`
-
-### Web UI Features
-
-- **Prompt Input**: Enter your natural language request
-- **Configuration Panel**: Set OpenAI API Key, Registry URL, OpenAI Model, and OpenAI Base URL
-- **Save Configuration**: Store settings in browser local storage
-- **Debug Mode**: Toggle detailed logging
-- **Example Prompts**: Quick buttons for common requests
-- **Real-time Results**: See which MCP server was used and the response
-
-### Configuration Options
-
-- **OpenAI API Key** (required): Your OpenAI API key
-- **Registry URL** (required): The MCP registry endpoint (e.g., `http://localhost:8000/mcp/registry`)
-- **OpenAI Model** (optional): The model to use (defaults to `gpt-4o-mini`). Other options include `gpt-4`, `gpt-4o`, etc.
-- **OpenAI Base URL** (optional): Custom base URL for OpenAI API (defaults to OpenAI's official endpoint). Useful for using proxies or alternative OpenAI-compatible APIs.
-
-### Benefits of Web UI
-
-- No environment variables needed
-- No command line arguments
-- Visual feedback and error handling
-- Persistent configuration
-- Modern, responsive design
-
-### Production
-
-```bash
-# Build the TypeScript code
-npm run build
-
-# Run the compiled JavaScript
-npm start
-```
-
 ## Architecture
 
-Minimal single-file application (~140 lines):
+The application is split into two main components:
 
-- **`src/agent.ts`** - Complete application in one file
+- **`src/agent.ts`** - CLI application (~140 lines)
+- **`src/server.ts`** - Express server for the Web UI (~140 lines)
+- **`public/index.html`** - Dark-themed web interface with Kong branding
 
 ### Code Structure
 
-1. **Configuration** (lines 3-6): Model, registry URL, debug flag
-2. **CLI Parsing** (lines 14-40): Get user prompt from command line
-3. **Find Server** (lines 42-60): Search registry for appropriate MCP server
-4. **Execute Request** (lines 62-72): Run user request on found server
-5. **Main Flow** (lines 74-139): Orchestrate the entire process
+**CLI (agent.ts):**
+1. **Configuration**: Model, registry URL, debug flag
+2. **CLI Parsing**: Get user prompt from command line
+3. **Find Server**: Search registry for appropriate MCP server
+4. **Execute Request**: Run user request on found server
+5. **Main Flow**: Orchestrate the entire process
 
-### Key Features
-
-1. **Minimal Code**: ~140 lines of clean, focused code
-2. **No Classes**: Simple functions and arrow functions
-3. **Structured Responses**: JSON Schema for reliable server discovery
-4. **Error Handling**: Simple try-catch with clear error messages
-5. **Debug Mode**: Optional detailed logging via `--debug` flag
+**Web UI (server.ts + index.html):**
+1. **Express Server**: API endpoint to run the agent
+2. **Static Files**: Dark-themed HTML/CSS/JS interface
+3. **Markdown Rendering**: Using marked.js library
+4. **Configuration Management**: Browser local storage
 
 ## Registering MCP Servers
 
@@ -196,20 +163,27 @@ This will delete the weather MCP server and its version from the registry.
 
 ## Configuration
 
-The application supports the following environment variables:
+### Environment Variables (CLI only)
 
 - `OPENAI_API_KEY` (required): Your OpenAI API key
 
-You can also enable debug mode using the `--debug` CLI flag.
+### Web UI Configuration
+
+All configuration is done through the web interface:
+
+- **OpenAI API Key** (required): Your OpenAI API key
+- **Registry URL** (required): The MCP registry endpoint (e.g., `http://localhost:8000/mcp/registry`)
+- **OpenAI Base URL** (optional): Custom base URL for OpenAI API (defaults to OpenAI's official endpoint). Useful for using proxies or alternative OpenAI-compatible APIs.
+- **OpenAI Model** (optional): The model to use (defaults to `gpt-4o-mini`). Other options include `gpt-4`, `gpt-4o`, etc.
 
 ## Available Scripts
 
-- `npm run dev` - Run the TypeScript source directly using tsx
+- `npm run dev` - Run the TypeScript source directly using tsx (CLI mode)
+- `npm run ui` - Start the web UI server in development mode
+- `npm run ui:build` - Build and run the compiled web UI server
 - `npm run build` - Compile TypeScript to JavaScript in the `dist/` folder
 - `npm start` - Run the compiled JavaScript from `dist/agent.js`
 - `npm run clean` - Remove the `dist/` folder
-- `npm run ui` - Start the web UI server in development mode
-- `npm run ui:build` - Build and run the compiled web UI server
 
 ## Technical Details
 
@@ -217,4 +191,17 @@ You can also enable debug mode using the `--debug` CLI flag.
 - **TypeScript**: ES2022 target, minimal type annotations
 - **JSON Schema**: Structured outputs for server discovery
 - **Functional Style**: Arrow functions, no classes
-- **~140 Lines**: Entire application in one focused file
+- **Express.js**: Web server for the UI
+- **Marked.js**: Markdown rendering for responses
+- **Kong Branding**: Dark theme with lime green (#CAFE00) accents
+
+## Browser Compatibility
+
+The Web UI works in all modern browsers that support:
+- ES6+ JavaScript
+- CSS Grid and Flexbox
+- Local Storage API
+
+## License
+
+Apache-2.0

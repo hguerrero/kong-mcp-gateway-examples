@@ -156,14 +156,24 @@ The Volcano Agent is a TypeScript application that demonstrates how to:
 - Invoke tools on MCP servers
 - Build AI-powered workflows
 
+It includes both a **CLI interface** and a **Web UI** with a beautiful dark theme featuring Kong's signature lime green branding.
+
 See [volcano-agent/README.md](volcano-agent/README.md) for detailed setup and usage instructions.
 
-Quick start:
+Quick start (Web UI - Recommended):
+```bash
+cd volcano-agent
+npm install
+npm run ui
+# Open http://localhost:3000 in your browser
+```
+
+Quick start (CLI):
 ```bash
 cd volcano-agent
 npm install
 export OPENAI_API_KEY="your-api-key-here"
-npm run dev
+npm run dev -- -p "Tell me a Chuck Norris joke"
 ```
 
 ## 🔍 Usage Examples
@@ -203,6 +213,8 @@ The included AI agent demonstrates:
 - **Error Handling** - Graceful failure recovery
 - **CLI Interface** - Easy command-line usage
 - **Debug Mode** - Detailed logging for troubleshooting
+- **Web UI** - Modern dark-themed interface with Kong 2026 branding (neon lime green)
+- **Markdown Rendering** - Full markdown support for rich responses
 
 ## 📊 Use Cases
 
